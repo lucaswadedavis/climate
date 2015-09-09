@@ -15,6 +15,17 @@ app.c={};
 
 app.m.app_name="Climate";
 
+app.m.worlds = [
+  {id:'mercury', name: 'Mercury', meanSurfacePressure: 0, solarInput: 9126},
+  {id:'venus', name: 'Venus', meanSurfacePressure: 9200000, solarInput: 2614},
+  {id:'earth', name: 'Earth', meanSurfacePressure: 98888, solarInput: 1362},
+  {id:'luna', name: 'The Moon', meanSurfacePressure: 0, solarInput: 1362},
+  {id:'mars', name: 'Mars', meanSurfacePressure: 685.4, solarInput: 589},
+  {id:'europa', name: 'Europa', meanSurfacePressure: 0.0000001, solarInput: 50},
+  {id:'titan', name: 'Titan', meanSurfacePressure: 146700, solarInput: 14},
+  {id:'triton', name: 'Triton', meanSurfacePressure: 1.7, solarInput: 2}
+];
+
 app.m.variables = [
   //{id:'planetRadius', name:'Planetary Radius', min:1737, max:24622}, /* in km */
   //{id:'planetDensity', name: 'Planetary Density', min:2.328, max:11.34},
@@ -22,7 +33,6 @@ app.m.variables = [
   //{id: 'molecularMassOfAir', name: 'Molecular Mass of Air', min:0, max:100}, /* in kg per mol */
   {id:'solarInput', name: 'Solar Input', min:0, max:9126, units: 'Watts per Square Meter'} 
 ];
-
 
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////
@@ -81,28 +91,53 @@ app.v.sliders = function(bounds, context) {
   d += '<h3>Average Surface Temperature <span id="mean-surface-temperature"></span></h3>';
 
   for (var i = 0; i < app.m.variables.length; i++) {
-    d += '<h3>' + app.m.variables[i].name + ': <span id="' + app.m.variables[i].id + '"></span></h3>';
-    d += '<div id="' + app.m.variables[i].id + '"></div>';
+    d += '<div>';
+      d += '<h3>' + app.m.variables[i].name + ': <span class="' + app.m.variables[i].id + '"></span></h3>';
+      d += '<input type="text" class="'+app.m.variables[i].id+'"></input>';
+      d += '<div class="' + app.m.variables[i].id + '"></div>';
+    d += '</div>';
   }
 
   $('#controls').html(d);
 
   _.each(app.m.variables, function(x) {
-    $('div#' + x.id).slider({
+    $('div.' + x.id).slider({
       value: x.min,
       min: x.min, 
       max: x.max,
       slide: function(event, ui) {
-        $('span#' + x.id).text(ui.value + ' ' + x.units);
+        $('span.' + x.id).text(ui.value + ' ' + x.units);
         app.m[x.id] = ui.value;
         var meanSurfaceTemperature = app.c.calculateMeanSurfaceTemperature(app.m.solarInput, app.m.meanSurfacePressure);
         tempF = ((meanSurfaceTemperature * 9) / 5) -459.67;
+
         if (!_.isNaN(meanSurfaceTemperature)) {
           $('span#mean-surface-temperature').text(Math.floor(tempF) + ' degrees F');
         }
+
+        $('input[type=text].' + x.id).val(ui.value);
+
       }
     });
+
+
+    $('input[type=text].' + x.id).on("keyup",function(){
+      var value = parseInt( $(this).val(), 10);
+      app.m[x.id] = value;
+      var meanSurfaceTemperature = app.c.calculateMeanSurfaceTemperature(app.m.solarInput, app.m.meanSurfacePressure);
+      tempF = ((meanSurfaceTemperature * 9) / 5) -459.67;
+
+      if (!_.isNaN(meanSurfaceTemperature)) {
+        $('span#mean-surface-temperature').text(Math.floor(tempF) + ' degrees F');
+      }
+
+      $('div.' + x.id).slider('value', value);
+
+    });
+
   });
+
+
 };
 
 
@@ -167,7 +202,7 @@ app.v.css_config=function(){
     },
     'div#controls h3':{
       'color':'#fff',
-      'margin-left':'20px'
+      'margin-left':'0px'
     },
     'div#controls div':{
       'margin':'20px'
